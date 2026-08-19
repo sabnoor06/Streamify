@@ -1,5 +1,8 @@
 import User from "../models/User.js";
 import FriendRequest from "../models/FriendRequest.js";
+import { upsertStreamUser } from "../lib/stream.js";
+import fs from "fs";
+import path from "path";
 
 export async function getRecommendedUsers(req, res) {
   try {
@@ -143,6 +146,63 @@ export async function getOutgoingFriendReqs(req, res) {
     res.status(200).json(outgoingRequests);
   } catch (error) {
     console.log("Error in getOutgoingFriendReqs controller", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+}
+
+export async function updateProfile(req, res) {
+  try {
+    const userId = req.user.id;
+    const { profilePic } = req.body;
+
+    if (!profilePic) {
+      return res.status(400).json({ message: "Profile picture is required" });
+    }
+
+    let finalProfilePic = profilePic;
+
+    // Check if the profilePic is a base64 image string
+    if (profilePic.startsWith("data:image")) {
+      const matches = profilePic.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,(.+)$/);
+      if (!matches || matches.length !== 3) {
+        return res.status(400).json({ message: "Invalid image format" });
+      }
+
+      const ext = matches[1].split("/")[1]; // e.g. png, jpeg
+      const buffer = Buffer.from(matches[2], "base64");
+
+      const filename = `profile-${userId}-${Date.now()}.${ext}`;
+      const filepath = path.join(path.resolve(), "uploads", filename);
+
+      fs.writeFileSync(filepath, buffer);
+
+      const protocol = req.secure ? "https" : "http";
+      finalProfilePic = `${protocol}://${req.headers.host}/uploads/${filename}`;
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { profilePic: finalProfilePic },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    try {
+      await upsertStreamUser({
+        id: updatedUser._id.toString(),
+        name: updatedUser.fullName,
+        image: updatedUser.profilePic,
+      });
+    } catch (streamError) {
+      console.log("Error updating Stream user during profile update:", streamError.message);
+    }
+
+    res.status(200).json({ success: true, user: updatedUser });
+  } catch (error) {
+    console.error("Error in updateProfile controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 }

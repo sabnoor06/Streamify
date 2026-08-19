@@ -7,6 +7,8 @@ import NotificationsPage from "./pages/NotificationsPage.jsx";
 import CallPage from "./pages/CallPage.jsx";
 import ChatPage from "./pages/ChatPage.jsx";
 import OnboardingPage from "./pages/OnboardingPage.jsx";
+import ProfilePage from "./pages/ProfilePage.jsx";
+import LandingPage from "./pages/LandingPage.jsx";
 
 import { Toaster } from "react-hot-toast";
 
@@ -25,17 +27,21 @@ const App = () => {
   if (isLoading) return <PageLoader />;
 
   return (
-    <div className="h-screen" data-theme={theme}>
+    <div className="min-h-screen bg-base-100 text-base-content" data-theme={theme}>
       <Routes>
         <Route
           path="/"
           element={
-            isAuthenticated && isOnboarded ? (
-              <Layout showSidebar={true}>
-                <HomePage />
-              </Layout>
+            isAuthenticated ? (
+              isOnboarded ? (
+                <Layout showSidebar={true}>
+                  <HomePage />
+                </Layout>
+              ) : (
+                <Navigate to="/onboarding" />
+              )
             ) : (
-              <Navigate to={!isAuthenticated ? "/login" : "/onboarding"} />
+              <LandingPage />
             )
           }
         />
@@ -98,6 +104,18 @@ const App = () => {
               )
             ) : (
               <Navigate to="/login" />
+            )
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            isAuthenticated && isOnboarded ? (
+              <Layout showSidebar={true}>
+                <ProfilePage />
+              </Layout>
+            ) : (
+              <Navigate to={!isAuthenticated ? "/login" : "/onboarding"} />
             )
           }
         />
