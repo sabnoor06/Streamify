@@ -152,9 +152,6 @@ Contributions are welcome! If you find a bug or have a feature idea, feel free t
 
 ---
 
-## 📄 License
-
-This project is open source and available under the [MIT License](LICENSE).
 
 ---
 
