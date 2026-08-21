@@ -12,6 +12,8 @@ Streamify is a full-stack web application that makes learning languages social a
 
 Think of it as a language partner platform with built-in messaging, video calls, and a beautiful interface that actually makes you want to use it.
 
+## LIVE APP  : https://streamify-n375.onrender.com/
+
 ---
 
 ## ✨ Features
